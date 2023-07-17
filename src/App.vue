@@ -157,7 +157,7 @@ b {
 	font-size: 1.4em;
 }
 .fc-event {
-	font-size: 1.2em;
+	font-size: 1em;
 	font-weight: normal !important;
 }
 .fc-day-sun {
@@ -171,6 +171,6 @@ b {
 	display: none;
 }
 .fc .fc-scrollgrid-liquid {
-	height: 130%;
+	height: 180%;
 }
 </style>
