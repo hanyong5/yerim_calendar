@@ -1,30 +1,176 @@
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
+<script>
+import { defineComponent } from 'vue';
+import { getPageTable } from 'vue-notion';
+import FullCalendar from '@fullcalendar/vue3';
+import dayGridPlugin from '@fullcalendar/daygrid';
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from '@fullcalendar/interaction';
+import { createEventId } from './event-utils';
+
+export default defineComponent({
+	components: {
+		FullCalendar,
+	},
+	data() {
+		return {
+			calendarOptions: {
+				plugins: [
+					dayGridPlugin,
+					timeGridPlugin,
+					interactionPlugin, // needed for dateClick
+				],
+				headerToolbar: {
+					left: 'prev next',
+					center: 'title',
+					right: 'prev,next today',
+				},
+				initialView: 'dayGridMonth',
+				// initialEvents: INITIAL_EVENTS, // alternatively, use the `events` setting to fetch from a feed
+				editable: true,
+				selectable: true,
+				selectMirror: true,
+				dayMaxEvents: true,
+				locale: 'ko',
+				weekends: true,
+				// select: this.handleDateSelect,
+				// eventClick: this.handleEventClick,
+				// eventsSet: this.handleEvents,
+				fixedWeekCount: false,
+				/* you can update a remote database when these fire:
+        eventAdd:
+        eventChange:
+        eventRemove:
+        */
+				businessHours: false,
+				nowIndicator: false,
+				dayMaxEvents: false, // allow "more" link when too many events
+				events: [],
+			},
+
+			currentEvents: [],
+		};
+	},
+	methods: {
+		handleWeekendsToggle() {
+			this.calendarOptions.weekends = !this.calendarOptions.weekends; // update a property
+		},
+		handleDateSelect(selectInfo) {
+			let title = prompt('Please enter a new title for your event');
+			let calendarApi = selectInfo.view.calendar;
+
+			calendarApi.unselect(); // clear date selection
+
+			if (title) {
+				calendarApi.addEvent({
+					id: createEventId(),
+					title,
+					start: selectInfo.startStr,
+					end: selectInfo.endStr,
+					allDay: selectInfo.allDay,
+				});
+			}
+		},
+		handleEventClick(clickInfo) {
+			if (
+				confirm(
+					`Are you sure you want to delete the event '${clickInfo.event.title}'`,
+				)
+			) {
+				clickInfo.event.remove();
+			}
+		},
+		handleEvents(events) {
+			this.currentEvents = events;
+		},
+	},
+	mounted() {
+		getPageTable('40ddd1dd95834d54b92a6d08ed27a277').then(b => {
+			this.calendarOptions.events = b;
+			console.log(b);
+		});
+	},
+});
 </script>
 
 <template>
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
-  </div>
-  <HelloWorld msg="Vite + Vue" />
+	<FullCalendar class="demo-app-calendar" :options="calendarOptions">
+		<template v-slot:eventContent="arg">
+			<!-- <b>{{ arg.timeText }}</b> -->
+			<i>{{ arg.event.title }}</i>
+		</template>
+	</FullCalendar>
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+<style lang="css">
+body {
+	font-size: 1em;
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+h2 {
+	margin: 0;
+	font-size: 14px;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+
+ul {
+	margin: 0;
+	padding: 0 0 0 1.5em;
+}
+
+li {
+	margin: 1.5em 0;
+	padding: 0;
+}
+
+b {
+	/* used for event dates/times */
+	margin-right: 3px;
+}
+
+.demo-app {
+	display: flex;
+	min-height: 100%;
+	font-family: Arial, Helvetica Neue, Helvetica, sans-serif;
+	font-size: 14px;
+}
+
+.demo-app-sidebar {
+	width: 300px;
+	line-height: 1.5;
+	background: #eaf9ff;
+	border-right: 1px solid #d3e2e8;
+}
+
+.demo-app-sidebar-section {
+	padding: 2em;
+}
+
+.demo-app-main {
+	flex-grow: 1;
+	padding: 3em;
+}
+
+.fc {
+	/* the calendar root */
+	max-width: 1100px;
+	margin: 0 auto;
+}
+#fc-dom-1.fc-toolbar-title {
+	font-size: 1.4em;
+}
+.fc-event {
+	font-size: 1.2em;
+	font-weight: normal !important;
+}
+.fc-day-sun {
+	color: red;
+	font-weight: bold;
+}
+.fc-day-sat {
+	color: blue;
+}
+.fc-toolbar-chunk div:first-child {
+	display: none;
+}
+.fc .fc-scrollgrid-liquid {
+	height: 130%;
 }
 </style>
